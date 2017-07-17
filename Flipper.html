@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>FlipBits</title>
+</head>
+
+
+<canvas id='DrawToMe' style='display: block;' width=window.innerWidth height=100vh></canvas>
+ <canvas id='Back' width=window.innerWidth height=100vh style='visibility:hidden;'></canvas>
+ 
+<script id='PictureData'>
+
+ColorArray = ["AliceBlue","AntiqueWhite","Aqua","Aquamarine","Azure","Beige","Bisque","Black","BlanchedAlmond","Blue","BlueViolet","Brown","BurlyWood","CadetBlue","Chartreuse","Chocolate","Coral","CornflowerBlue","Cornsilk","Crimson","Cyan","DarkBlue","DarkCyan","DarkGoldenRod","DarkGray","DarkGrey","DarkGreen","DarkKhaki","DarkMagenta","DarkOliveGreen","Darkorange","DarkOrchid","DarkRed","DarkSalmon","DarkSeaGreen","DarkSlateBlue","DarkSlateGray","DarkSlateGrey","DarkTurquoise","DarkViolet","DeepPink","DeepSkyBlue","DimGray","DimGrey","DodgerBlue","FireBrick","FloralWhite","ForestGreen","Fuchsia","Gainsboro","GhostWhite","Gold","GoldenRod","Gray","Grey","Green","GreenYellow","HoneyDew","HotPink","IndianRed","Indigo","Ivory","Khaki","Lavender","LavenderBlush","LawnGreen","LemonChiffon","LightBlue","LightCoral","LightCyan","LightGoldenRodYellow","LightGray","LightGrey","LightGreen","LightPink","LightSalmon","LightSeaGreen","LightSkyBlue","LightSlateGray","LightSlateGrey","LightSteelBlue","LightYellow","Lime","LimeGreen","Linen","Magenta","Maroon","MediumAquaMarine","MediumBlue","MediumOrchid","MediumPurple","MediumSeaGreen","MediumSlateBlue","MediumSpringGreen","MediumTurquoise","MediumVioletRed","MidnightBlue","MintCream","MistyRose","Moccasin","NavajoWhite","Navy","OldLace","Olive","OliveDrab","Orange","OrangeRed","Orchid","PaleGoldenRod","PaleGreen","PaleTurquoise","PaleVioletRed","PapayaWhip","PeachPuff","Peru","Pink","Plum","PowderBlue","Purple","Red","RosyBrown","RoyalBlue","SaddleBrown","Salmon","SandyBrown","SeaGreen","SeaShell","Sienna","Silver","SkyBlue","SlateBlue","SlateGray","SlateGrey","Snow","SpringGreen","SteelBlue","Tan","Teal","Thistle","Tomato","Turquoise","Violet","Wheat","White","WhiteSmoke","Yellow","YellowGreen"];
+
+
+ function resizeCanvas() {
+            DrawToMe.width = window.innerWidth;
+            DrawToMe.height = window.innerHeight;
+            Back.width = window.innerWidth;
+            Back.height = window.innerHeight;
+ 
+    }
+	 resizeCanvas();
+ctx = DrawToMe.getContext('2d');
+Bctx = Back.getContext('2d');
+RecMax = Back.width*Back.height;
+Rw = 10;
+Rh = 10;
+Rows= 60;
+Cols = 60;
+
+
+NumCols = ColorArray.length;
+
+PickNew = function(){
+
+
+return Math.round(Math.random()*NumCols);
+
+}
+
+Bctx.strokeStyle = 'black';
+
+BString=[];
+GenBit = function(len){
+len = Math.min(len,RecMax);
+BString=[];
+TF = 0;
+for(var i=0; i<len; i++){
+BString.push(TF);
+TF=(TF+1)%4;
+}
+SetBitRC();
+}
+
+
+
+SetBitRC = function(){
+CanDraw=RecMax;
+Rw=1;
+Rh=1;
+Rows = Back.height;
+Columns = Back.width;
+while(CanDraw > BString.length){
+Rw++;
+Rh++;
+Rows=Back.height/Rh;
+Columns= Back.width/Rw;
+CanDraw=Rows*Columns;
+}
+if(CanDraw < BString.length){
+Rw--;
+Rh--;
+Rows=Back.height/Rh;
+Columns= Back.width/Rw;
+CanDraw=Rows*Columns;
+}
+
+DrawBit();
+}
+
+DrawBit= function(){
+Bctx.fillStyle='black';
+Bctx.fillRect(0,0,Back.width,Back.height);
+
+C=0;
+R=0;
+
+for(D = 0; D < BString.length; D++){
+
+Bctx.fillStyle=ColorArray[BString[D]];
+
+Bctx.fillRect(C,R,Rw,Rh);
+if(Rw>3){
+Bctx.beginPath();
+Bctx.rect(C,R,Rw,Rh);
+Bctx.stroke();
+
+}
+C +=Rw;
+if(C > Back.width-Rw/2){
+C=0;
+R+=Rh;
+}
+
+}
+ctx.drawImage(Back,0,0);
+
+}
+
+
+Flip= function(){
+Old=-1;
+Oldf = false;
+OldC=-1;
+NeverEntered=true;
+for(var B = 0; B < BString.length; B++){
+if(Old == BString[B]){
+if(Oldf){
+BString[B]=OldC;
+}
+
+}
+else{
+if(Old!=-1){
+NeverEntered=false;}
+Old=BString[B];
+Oldf = Math.random()>Math.random();
+if(Oldf){
+OldC= PickNew();
+BString[B]=OldC;
+AnyFlip=true;
+}
+}
+
+}
+if(NeverEntered){
+AnyFlip=false;
+}
+DrawBit();
+}
+
+Start=function(Count){
+resizeCanvas() 
+GenBit(Count);
+OldTime= Date.now()
+requestAnimationFrame(Cycle);
+
+}
+
+Cycle = function(){
+AnyFlip=true;
+NowTime = Date.now();
+
+if(NowTime - OldTime > 0){
+AnyFlip=false;
+Flip();
+OldTime= Date.now();
+
+}
+if(AnyFlip){
+requestAnimationFrame(Cycle);
+}
+else{
+Start(Math.floor(BString.length*1.1));
+}
+
+}
+
+
+
+Start(212931);
+
+
+
+
+
+</script>
