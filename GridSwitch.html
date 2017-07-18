@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>FlipBits</title>
+</head>
+
+
+<canvas id='DrawToMe' style='display: block;' width=window.innerWidth height=100vh></canvas>
+ <canvas id='Back' width=window.innerWidth height=100vh style='visibility:hidden;'></canvas>
+ 
+<script id='PictureData'>
+
+ColorArray = ["AliceBlue","AntiqueWhite","Aqua","Aquamarine","Azure","Beige","Bisque","Black","BlanchedAlmond","Blue","BlueViolet","Brown","BurlyWood","CadetBlue","Chartreuse","Chocolate","Coral","CornflowerBlue","Cornsilk","Crimson","Cyan","DarkBlue","DarkCyan","DarkGoldenRod","DarkGray","DarkGrey","DarkGreen","DarkKhaki","DarkMagenta","DarkOliveGreen","Darkorange","DarkOrchid","DarkRed","DarkSalmon","DarkSeaGreen","DarkSlateBlue","DarkSlateGray","DarkSlateGrey","DarkTurquoise","DarkViolet","DeepPink","DeepSkyBlue","DimGray","DimGrey","DodgerBlue","FireBrick","FloralWhite","ForestGreen","Fuchsia","Gainsboro","GhostWhite","Gold","GoldenRod","Gray","Grey","Green","GreenYellow","HoneyDew","HotPink","IndianRed","Indigo","Ivory","Khaki","Lavender","LavenderBlush","LawnGreen","LemonChiffon","LightBlue","LightCoral","LightCyan","LightGoldenRodYellow","LightGray","LightGrey","LightGreen","LightPink","LightSalmon","LightSeaGreen","LightSkyBlue","LightSlateGray","LightSlateGrey","LightSteelBlue","LightYellow","Lime","LimeGreen","Linen","Magenta","Maroon","MediumAquaMarine","MediumBlue","MediumOrchid","MediumPurple","MediumSeaGreen","MediumSlateBlue","MediumSpringGreen","MediumTurquoise","MediumVioletRed","MidnightBlue","MintCream","MistyRose","Moccasin","NavajoWhite","Navy","OldLace","Olive","OliveDrab","Orange","OrangeRed","Orchid","PaleGoldenRod","PaleGreen","PaleTurquoise","PaleVioletRed","PapayaWhip","PeachPuff","Peru","Pink","Plum","PowderBlue","Purple","Red","RosyBrown","RoyalBlue","SaddleBrown","Salmon","SandyBrown","SeaGreen","SeaShell","Sienna","Silver","SkyBlue","SlateBlue","SlateGray","SlateGrey","Snow","SpringGreen","SteelBlue","Tan","Teal","Thistle","Tomato","Turquoise","Violet","Wheat","White","WhiteSmoke","Yellow","YellowGreen"];
+
+
+ function resizeCanvas() {
+            DrawToMe.width = window.innerWidth;
+            DrawToMe.height = window.innerHeight;
+            Back.width = window.innerWidth;
+            Back.height = window.innerHeight;
+ ctx = DrawToMe.getContext('2d');
+Bctx = Back.getContext('2d');
+RecMax = Back.width*Back.height;
+
+
+    }
+	 resizeCanvas();
+
+Rw = 10;
+Rh = 10;
+Rows= 60;
+Cols = 60;
+
+
+NumCols = ColorArray.length;
+
+PickNew = function(){
+
+
+return Math.round(Math.random()*NumCols);
+
+}
+
+Bctx.strokeStyle = 'black';
+
+BString=[];
+FlipMap=[]; // -1 for no flip, number for flip to the flip
+
+GenBit = function(len){
+len = Math.min(len,RecMax);
+console.log(len);
+CanDraw=RecMax;
+Rw=1;
+Rh=1;
+Rows = Back.height;
+Columns = Back.width;
+while(CanDraw > len){
+Rw++;
+Rh++;
+Rows=Back.height/Rh;
+Columns= Back.width/Rw;
+CanDraw=Rows*Columns;
+}
+if(CanDraw < len){
+Rw--;
+Rh--;
+Rows=Back.height/Rh;
+Columns= Back.width/Rw;
+CanDraw=Rows*Columns;
+}
+
+TF=0;
+BString=[];
+FlipMap=[];
+for(var r = 0; r< Rows; r++){
+var Row = [];
+var fliprow = [];
+for(var c = 0; c < Columns; c++){
+fliprow.push(-1);
+Row.push(TF);
+TF = (TF+1) % ColorArray.length;
+}
+BString.push(Row);
+FlipMap.push(fliprow);
+}
+
+DrawBit();
+}
+
+
+
+DrawBit= function(){
+Bctx.fillStyle='black';
+Bctx.fillRect(0,0,Back.width,Back.height);
+
+
+for(var r = 0; r< Rows; r++){
+
+
+
+for(var c = 0; c < Columns; c++){
+Cell = BString[r][c];
+Bctx.fillStyle=ColorArray[Cell];
+C = c * Rh;
+R = r * Rw;
+Bctx.fillRect(C,R,Rw,Rh);
+if(Rw>3){
+Bctx.beginPath();
+Bctx.rect(C,R,Rw,Rh);
+Bctx.stroke();
+}
+}
+
+
+}
+ctx.drawImage(Back,0,0);
+
+}
+
+
+Flip= function(){
+//go one by one
+//chec if up or left neighbor is same, do what they did
+//else 
+//FlipMap
+for(var r = 0; r< Rows; r++){
+for(var c = 0; c < Columns; c++){
+FlipMap[r][c]=-1;
+
+Fin = false;
+Cell = BString[r][c];
+
+
+
+
+if(c>0){
+if(Cell == BString[r][c-1]){
+FlipMap[r][c] = FlipMap[r][c-1];
+Fin=true;
+}
+}
+
+if(r>0){
+if(Fin){
+if(Cell == BString[r-1][c]){
+if(FlipMap[r][c-1] != FlipMap[r-1][c]){
+Fin=false;
+}
+}
+}
+else{
+if(Cell == BString[r-1][c]){
+FlipMap[r][c] = FlipMap[r-1][c];
+Fin=true;
+}
+}
+
+
+
+}
+
+
+if(!Fin){
+if(Math.random()>Math.random()){
+FlipMap[r][c] = PickNew();
+
+}
+
+}
+
+
+
+}
+
+
+}
+
+for(var r = 0; r< Rows; r++){
+for(var c = 0; c < Columns; c++){
+if(FlipMap[r][c]!=-1){
+if(FlipMap[r][c]!=FlipMap[0][0]){
+AnyFlip = true;
+
+}
+BString[r][c] = FlipMap[r][c];
+
+
+}
+}}
+
+DrawBit();
+if(AnyFlip){
+requestAnimationFrame(Cycle);
+}
+else{
+THETOT*=1.1;
+Start(Math.floor(THETOT));
+}
+
+}
+
+Start=function(Count){
+resizeCanvas();
+GenBit(Count); //Now doing an arrya of arrays
+//need to grab nrow ncol from Count
+OldTime= Date.now()
+
+requestAnimationFrame(Cycle);
+
+}
+
+Cycle = function(){
+
+AnyFlip=true;
+NowTime = Date.now();
+
+if(NowTime - OldTime > 10){
+AnyFlip=false;
+Flip();
+OldTime= Date.now();
+
+}
+else{
+requestAnimationFrame(Cycle);
+}
+
+}
+
+//THETOT=300;
+THETOT=RecMax/10;
+Start(THETOT);
+
+
+
+
+
+</script>
